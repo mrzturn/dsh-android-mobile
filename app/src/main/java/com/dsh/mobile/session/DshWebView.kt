@@ -52,7 +52,7 @@ fun DshWebView(
     }
     val origin = sessionVm.connection?.baseUrl ?: entryUrl.substringBefore("/pair")
     val webView = remember(origin) {
-        WebViewCache.get(origin) ?: WebView(context).apply {
+        WebViewCache.get(origin, context) ?: WebView(WebViewCache.newCreationContext(context)).apply {
         WebViewCache.put(origin, this)
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT,
@@ -94,6 +94,7 @@ fun DshWebView(
     )
 }
 
+@SuppressLint("SetJavaScriptEnabled") // required: hosts the paired desktop's official Web GUI; all other hardening flags set below
 private fun configureHardenedSettings(web: WebView) = with(web.settings) {
     javaScriptEnabled = true
     domStorageEnabled = true
