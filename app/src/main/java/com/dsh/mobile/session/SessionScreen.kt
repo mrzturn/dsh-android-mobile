@@ -22,7 +22,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -52,12 +54,14 @@ fun SessionScreen(
     entryUrl: String,
     posture: FoldPosture,
     onBack: () -> Unit,
+    onRePair: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val vm: SessionViewModel = viewModel(key = "session-" + connection.id)
     vm.bind(connection)
 
     val load by vm.load.collectAsState()
+    val stalePairing by vm.stalePairing.collectAsState()
     var webRef by remember { mutableStateOf<android.webkit.WebView?>(null) }
     var viewportSize by remember { mutableStateOf(android.util.Size(0, 0)) }
     val density = androidx.compose.ui.platform.LocalDensity.current.density
@@ -134,6 +138,29 @@ fun SessionScreen(
                         onRetry = { webRef?.reload(); vm.retry(null) },
                         modifier = Modifier.align(Alignment.Center),
                     )
+                }
+            }
+
+            if (stalePairing) {
+                Surface(
+                    tonalElevation = 3.dp,
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "配对已失效 —— 请在桌面端刷新二维码后重新扫码",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = {
+                            vm.clearCredentialsAndBack()
+                            onRePair()
+                        }) { Text("重新配对") }
+                    }
                 }
             }
 

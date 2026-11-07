@@ -30,6 +30,7 @@ fun DshRoot(vm: MainViewModel) {
                     entryUrl = r.entryUrl,
                     posture = posture,
                     onBack = { vm.goHome() },
+                    onRePair = { vm.openScanner() },
                 )
             }
         }

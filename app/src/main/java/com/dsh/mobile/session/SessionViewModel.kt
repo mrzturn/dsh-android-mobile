@@ -42,6 +42,13 @@ class SessionViewModel(app: Application) : AndroidViewModel(app) {
     /** Set when the entry URL failed hard (unreachable host) for a retry UI. */
     val lastFailureUrl = MutableStateFlow<String?>(null)
 
+    /**
+     * True when the server served the "Pairing link invalid" refusal page
+     * (HTTP 200): the device cookie or grant is stale/revoked. The session
+     * UI then offers a jump back to the scanner instead of a dead page.
+     */
+    val stalePairing = MutableStateFlow(false)
+
     var connection: Connection? = null
 
     fun bind(connection: Connection) {
@@ -57,6 +64,8 @@ class SessionViewModel(app: Application) : AndroidViewModel(app) {
         _pageTitle.value = view.title ?: ""
         _canGoBack.value = view.canGoBack()
         lastFailureUrl.value = null
+        // The host serves the refusal as a 200 page with this fixed title.
+        stalePairing.value = view.title?.trim() == "Pairing link invalid"
         CookieManager.getInstance().flush()
     }
 
