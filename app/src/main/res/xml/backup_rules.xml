@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <exclude domain="sharedpref" path="connections.xml" />
+    <!-- WebView profile holds the dsh_pair device cookie (app_webview/Cookies etc.):
+         never leave the live session credential in cloud backups / device transfers. -->
+    <exclude domain="root" path="app_webview/" />
 </full-backup-content>

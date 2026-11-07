@@ -58,7 +58,7 @@ gradle :app:assembleDebug
 ## 安全
 
 - 设备 Cookie 是**全权凭据**：仅保存在本机 WebView（`HttpOnly`，不跨应用），
-  “清除本机凭据”会同时清掉 Cookie 与连接记录；云端备份已排除凭据存储。
+  “清除本机凭据”会同时清掉 Cookie 与连接记录；云端备份与换机迁移均已排除凭据存储（连接记录 + WebView 会话 Cookie）。
 - WebView 加固：禁用文件/内容访问、禁多窗口、禁地理定位、强制 Safe Browsing、
   禁混合内容；非会话源链接一律外部打开。
 
