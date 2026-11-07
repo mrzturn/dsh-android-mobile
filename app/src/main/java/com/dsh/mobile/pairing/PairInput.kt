@@ -24,7 +24,7 @@ object PairInput {
         if (trimmed.isEmpty()) return null
 
         // Pull the first URL out of arbitrary surrounding text.
-        val urlMatch = Regex("https?://[^\\s'\"<>]+").find(trimmed)
+        val urlMatch = Regex("https?://[^\\s'\"<>]+", RegexOption.IGNORE_CASE).find(trimmed)
         if (urlMatch != null) {
             val url = urlMatch.value.trimEnd(',', ')', ']')
             return fromUrl(url)
@@ -39,7 +39,7 @@ object PairInput {
     fun fromUrl(url: String): PairAttempt? {
         val parsed = runCatching { java.net.URI(url.trim()) }.getOrNull() ?: return null
         val base = PairingClient().normalizeBase(
-            (parsed.scheme ?: "http") + "://" + (parsed.host ?: return null) +
+            (parsed.scheme?.lowercase() ?: "http") + "://" + (parsed.host ?: return null) +
                 (if (parsed.port > 0) ":${parsed.port}" else "")
         )
         val query = parsed.rawQuery ?: ""
@@ -49,7 +49,10 @@ object PairInput {
         val pair = params["pair"] ?: params["token"]
         if (!pair.isNullOrBlank()) {
             val clean = java.net.URLDecoder.decode(pair, "UTF-8")
-            if (HEX32.matches(clean)) return PairAttempt.PairLink("$base/pair-accept?pair=$clean", base, clean)
+            if (HEX32.matches(clean)) {
+                val token = clean.lowercase() // server mints lowercase hex; normalize typed input
+                return PairAttempt.PairLink("$base/pair-accept?pair=$token", base, token)
+            }
         }
         // key= link or any other harness URL → direct open (server decides).
         return PairAttempt.Direct(url.trim(), base)

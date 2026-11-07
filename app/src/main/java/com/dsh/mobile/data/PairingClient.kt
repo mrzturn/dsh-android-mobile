@@ -52,7 +52,8 @@ class PairingClient {
     /** Normalized origin (scheme://host[:port], no trailing slash). */
     fun normalizeBase(raw: String): String {
         var s = raw.trim().trimEnd('/')
-        if (!s.startsWith("http://") && !s.startsWith("https://")) s = "http://$s"
+        val low = s.lowercase()
+        if (!low.startsWith("http://") && !low.startsWith("https://")) s = "http://$s"
         return s
     }
 }

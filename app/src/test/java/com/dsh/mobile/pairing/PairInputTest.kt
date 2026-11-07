@@ -62,4 +62,20 @@ class PairInputTest {
             (a as PairAttempt.PairLink).url,
         )
     }
+
+    @Test
+    fun `uppercase 32-hex key is normalized to lowercase pair link`() {
+        val a = PairInput.parse("HTTP://192.168.1.10:3080/pair-accept?pair=" + "ABCDEF0123456789ABCDEF0123456789")
+        assertTrue(a is PairAttempt.PairLink)
+        assertEquals("http://192.168.1.10:3080/pair-accept?pair=abcdef0123456789abcdef0123456789", (a as PairAttempt.PairLink).url)
+    }
+
+    @Test
+    fun `non-hex token (grant-shaped) falls back to Direct for the server to judge`() {
+        // dsh-remote-web-ui mints 32-hex pair tokens; any other token material
+        // (e.g. a pasted /pair-app?grant=... one-time grant) must not be
+        // rewritten — open it as-is and let the host fence decide.
+        val a = PairInput.parse("https://desk.example.com/pair-app?grant=Ab12Cd34-_x")
+        assertTrue(a is PairAttempt.Direct)
+    }
 }
