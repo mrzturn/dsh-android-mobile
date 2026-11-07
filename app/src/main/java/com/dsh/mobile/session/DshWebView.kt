@@ -119,16 +119,28 @@ private fun buildWebViewClient(
     injectScript: String,
 ): WebViewClient = object : WebViewClient() {
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+        if (!request.isForMainFrame) return false
         val url = request.url.toString()
-        val base = sessionVm.connection?.baseUrl ?: return false
-        val sameHost = request.url.host == runCatching { java.net.URI(base).host }.getOrNull()
-        val scheme = request.url.scheme ?: ""
-        // Keep the session origin inside; open everything else externally.
-        if (!sameHost || (scheme != "http" && scheme != "https")) {
-            if (request.isForMainFrame) onExternalLink(url)
-            return true
+        val base = sessionVm.connection?.baseUrl
+        val (action, _, newBase) = NavPolicy.decide(
+            baseHost = base?.let { runCatching { java.net.URI(it).host }.getOrNull() },
+            targetUrl = url,
+            pairing = sessionVm.pairing,
+        )
+        return when (action) {
+            NavAction.OPEN_INTERNAL -> false
+            NavAction.OPEN_EXTERNAL -> {
+                onExternalLink(url)
+                true
+            }
+            NavAction.ADOPT_BASE -> {
+                // The server's canonical origin answered mid-pairing (grant
+                // redirect); follow it in-app and re-base the session.
+                sessionVm.adoptBase(newBase ?: return false)
+                view.post { view.loadUrl(url) }
+                true
+            }
         }
-        return false
     }
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
@@ -137,6 +149,7 @@ private fun buildWebViewClient(
     }
 
     override fun onPageFinished(view: WebView, url: String) {
+        if (sessionVm.pairing && !url.contains("/pair-accept")) sessionVm.markPaired()
         sessionVm.onPageFinished(view, url)
     }
 

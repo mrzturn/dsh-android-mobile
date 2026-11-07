@@ -51,9 +51,31 @@ class SessionViewModel(app: Application) : AndroidViewModel(app) {
 
     var connection: Connection? = null
 
+    /** True while the pair boot flow (token -> grant -> device cookie) is in flight. */
+    var pairing: Boolean = true
+
     fun bind(connection: Connection) {
         this.connection = connection
+        pairing = true
     }
+
+    /**
+     * Adopt the server's canonical origin mid-pairing (cross-host grant
+     * redirect): re-point the session at the base the server itself chose,
+     * so the device cookie and later polls live on the same origin.
+     */
+    fun adoptBase(newBase: String) {
+        val conn = connection ?: return
+        if (conn.baseUrl == newBase) return
+        val moved = graph.connectionStore.upsert(
+            newBase,
+            kind = conn.kind,
+            label = conn.label,
+        )
+        connection = moved
+    }
+
+    fun markPaired() { pairing = false }
 
     fun onProgress(progress: Int) {
         _load.value = if (progress in 1..99) SessionLoad.Loading(progress) else _load.value
