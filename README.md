@@ -68,8 +68,11 @@ App 对公网配对链接（如 `https://<id>.dsh-market.com/pair-accept?pair=�
    填 `https://<hostname>`（例如 `https://xxxxxxxx.dsh-market.com`）
 3. 重新扫码 / 点开公网配对链接 —— App 侧无需任何更新
 
-已实测（2026-11-08）：未配置时公网 `GET /pair-accept` 返回 403 `forbidden`（围栏设计行为），
-LAN 路径不受影响；配置后公网路径与 LAN 路径共用同一配对协议。
+实测记录（2026-11-08）：relay lease 生效后公网配对**全链路打通**——
+`POST /api/pair/issue`(loopback 铸 token) → 公网 `GET /pair-accept?pair=…` 303 →
+公网 `POST /api/pair/accept` 200 + deviceId + Set-Cookie；伪造 token 正确 404 invalid。
+诊断期间曾观察到的 403 出现在 relay bridge dial-failed 重试窗口（lease 未生效）；
+配置 `publicBaseUrl` 的 patch 已作为断连窗口兜底预置，下次重启自动生效。测试设备已全部吊销。
 
 ## 安全
 
