@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug build: applicationIdSuffix ".debug" changes the package to
+     com.dsh.mobile.debug, so the static shortcut must target that package.
+     This file overrides src/main/res/xml/shortcuts.xml in debug builds only. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="reconnect"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_menu_recent_history"
+        android:shortcutShortLabel="@string/shortcut_reconnect"
+        android:shortcutLongLabel="@string/shortcut_reconnect">
+        <intent
+            android:action="com.dsh.mobile.action.RECONNECT"
+            android:targetPackage="com.dsh.mobile.debug"
+            android:targetClass="com.dsh.mobile.MainActivity" />
+    </shortcut>
+</shortcuts>

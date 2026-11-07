@@ -40,6 +40,16 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+
+            <!-- Tap a pair link (…/pair-accept?pair=…) in a browser or chat app:
+                 narrow /pair path filter so the app never candidates for ordinary links. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" android:pathPrefix="/pair" />
+                <data android:scheme="https" android:pathPrefix="/pair" />
+            </intent-filter>
         </activity>
 
         <!-- Long-press app icon: jump straight back to the last connection -->
