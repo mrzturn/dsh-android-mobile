@@ -43,12 +43,17 @@
 
             <!-- Tap a pair link (…/pair-accept?pair=…) in a browser or chat app:
                  narrow /pair path filter so the app never candidates for ordinary links. -->
-            <intent-filter>
+            <!-- host is wildcard by design (LAN IPs / public domains / tunnels);
+                 App Link domain verification cannot apply, so opt out explicitly. -->
+            <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="*" android:pathPrefix="/pair" />
-                <data android:scheme="https" android:host="*" android:pathPrefix="/pair" />
+                <!-- attributes combine across <data> tags: {http,https} × host * × pathPrefix /pair -->
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="*" />
+                <data android:pathPrefix="/pair" />
             </intent-filter>
         </activity>
 
