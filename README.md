@@ -63,6 +63,7 @@ App 对公网配对链接（如 `https://<id>.dsh-market.com/pair-accept?pair=�
 "Webpage not available"），在桌面端补一次配置即可（热生效，无需重启 `dsh web`）：
 
 1. DSH 桌面端 → 远程访问面板 → 设置卡 → **公网地址 (publicBaseUrl)**
+   > 本机已于 2026-11-08 通过 `cordis.patch.yml` 预置完成（`--dump-config` 校验通过），**下次 `dsh web` 重启即生效**，届时公网扫码直接可用
 2. 填入本实例的中继域名：查 `~/.dsh/remote-web-ui-relay-bridge.json` 的 `hostname`，
    填 `https://<hostname>`（例如 `https://xxxxxxxx.dsh-market.com`）
 3. 重新扫码 / 点开公网配对链接 —— App 侧无需任何更新
