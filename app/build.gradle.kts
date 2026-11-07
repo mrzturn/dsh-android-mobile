@@ -5,7 +5,27 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+
+import java.util.Properties
+import java.io.File
+
+// Release signing: active only when keystore/dsh-mobile.properties exists
+// (generated locally; never committed). Without it, release builds fall
+// back to the debug key so CI/other machines keep working.
+val keystorePropsFile = rootProject.file("keystore/dsh-mobile.properties")
+val dshSigning = if (keystorePropsFile.exists()) {
+    val p = Properties()
+    p.load(keystorePropsFile.inputStream())
+    mapOf(
+        "storeFile" to rootProject.file(p.getProperty("storeFile")) as File,
+        "storePassword" to p.getProperty("storePassword"),
+        "keyAlias" to p.getProperty("keyAlias"),
+        "keyPassword" to p.getProperty("keyPassword"),
+    )
+} else null
+
 android {
+
     namespace = "com.dsh.mobile"
     compileSdk = 36
     buildToolsVersion = "36.1.0"
@@ -24,6 +44,18 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
+            signingConfig = dshSigning?.let { s ->
+                val sf: File = s["storeFile"] as File
+                val sp: String = s["storePassword"] as String
+                val ka: String = s["keyAlias"] as String
+                val kp: String = s["keyPassword"] as String
+                signingConfigs.create("dsh") {
+                    storeFile = sf
+                    storePassword = sp
+                    keyAlias = ka
+                    keyPassword = kp
+                }
+            } ?: signingConfigs.getByName("debug")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
