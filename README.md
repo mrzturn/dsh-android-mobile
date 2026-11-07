@@ -55,6 +55,21 @@ gradle :app:assembleDebug
 # 产物: app/build/outputs/apk/debug/app-debug.apk
 ```
 
+## 公网访问（隧道 / 中继）
+
+App 对公网配对链接（如 `https://<id>.dsh-market.com/pair-accept?pair=…`）的解析与
+"Tunnel" 来源分类已内置并经单测覆盖；但服务端插件对 `/pair-accept` 的信任围栏只放行
+**局域网地址 + publicBaseUrl + trustedHosts**。若公网扫码出现 403（WebView 显示
+"Webpage not available"），在桌面端补一次配置即可（热生效，无需重启 `dsh web`）：
+
+1. DSH 桌面端 → 远程访问面板 → 设置卡 → **公网地址 (publicBaseUrl)**
+2. 填入本实例的中继域名：查 `~/.dsh/remote-web-ui-relay-bridge.json` 的 `hostname`，
+   填 `https://<hostname>`（例如 `https://xxxxxxxx.dsh-market.com`）
+3. 重新扫码 / 点开公网配对链接 —— App 侧无需任何更新
+
+已实测（2026-11-08）：未配置时公网 `GET /pair-accept` 返回 403 `forbidden`（围栏设计行为），
+LAN 路径不受影响；配置后公网路径与 LAN 路径共用同一配对协议。
+
 ## 安全
 
 - 设备 Cookie 是**全权凭据**：仅保存在本机 WebView（`HttpOnly`，不跨应用），
