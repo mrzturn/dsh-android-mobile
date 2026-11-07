@@ -4,6 +4,24 @@ Android 客户端，把手机变成 [DeepSeek Harness (DSH)](https://github.com/
 [`@linxin666/dsh-remote-web-ui`](https://github.com/zhu1090093659/dsh-web/tree/main/packages/dsh-remote-web-ui) 插件的配对协议，
 对 **三星 Galaxy Z Flip 7** 做了深度适配。
 
+## 安装
+
+构建产物（本仓库已构建好）：
+
+- **推荐**：`app/build/outputs/apk/release/app-release.apk` —— 签名正式版（13.5MB），包名 `com.dsh.mobile`，
+  桌面快捷方式指向正式包名。
+- 调试版：`app/build/outputs/apk/debug/app-debug.apk`（20.2MB），包名 `com.dsh.mobile.debug`，
+  可与正式版共存，便于对比测试。
+
+安装：将 APK 传到手机（USB / 网盘 / 局域网均可），点击安装并允许"未知来源"。
+构建方式：`./gradlew :app:assembleRelease`（签名配置见 `keystore/dsh-mobile.properties`，不入库，缺失时自动退回 debug 签名）。
+
+## 使用
+
+1. 桌面端打开 DSH → 侧边栏底部手机图标，进入"远程访问"面板；
+2. 手机端点"扫码配对"，对准桌面端二维码；或在手机浏览器/聊天应用中直接点开配对链接（本 app 会自动接管）；
+3. 配对成功后即为官方 Web GUI 完整界面，Z Flip 7 上可配合 Flex Mode 触控板使用。
+
 ## 功能
 
 - **扫码配对**：对准桌面端“远程访问”面板（侧边栏底部手机图标）的二维码即可完成配对；
