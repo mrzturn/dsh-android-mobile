@@ -55,12 +55,6 @@ gradle :app:assembleDebug
 # 产物: app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## 使用
-
-1. 桌面端：`dsh web` → 侧边栏手机图标 → 打开“局域网访问”或“自动公网隧道”→ 生成二维码。
-2. 手机端：安装 APK → 扫码 → 自动配对并进入官方界面。
-3. 断开后可从首页直接重连（设备 Cookie 仍然有效，直到桌面端“停止”或撤销该设备）。
-
 ## 安全
 
 - 设备 Cookie 是**全权凭据**：仅保存在本机 WebView（`HttpOnly`，不跨应用），
