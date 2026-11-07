@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="reconnect"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_menu_recent_history"
+        android:shortcutShortLabel="@string/shortcut_reconnect"
+        android:shortcutLongLabel="@string/shortcut_reconnect">
+        <intent
+            android:action="com.dsh.mobile.action.RECONNECT"
+            android:targetPackage="com.dsh.mobile"
+            android:targetClass="com.dsh.mobile.MainActivity" />
+    </shortcut>
+</shortcuts>
