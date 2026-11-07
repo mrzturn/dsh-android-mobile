@@ -8,9 +8,9 @@ Android 客户端，把手机变成 [DeepSeek Harness (DSH)](https://github.com/
 
 构建产物（本仓库已构建好）：
 
-- **推荐**：`app/build/outputs/apk/release/app-release.apk` —— 签名正式版（13.5MB），包名 `com.dsh.mobile`，
+- **推荐**：`dist/dsh-mobile-v1.1.0-release.apk`（与 `app/build/outputs/apk/release/app-release.apk` 相同）—— 签名正式版（14MB），包名 `com.dsh.mobile`，versionName **1.1.0**，
   桌面快捷方式指向正式包名。
-- 调试版：`app/build/outputs/apk/debug/app-debug.apk`（20.2MB），包名 `com.dsh.mobile.debug`，
+- 调试版：`dist/dsh-mobile-v1.1.0-debug.apk`，包名 `com.dsh.mobile.debug`，
   可与正式版共存，便于对比测试。
 
 安装：将 APK 传到手机（USB / 网盘 / 局域网均可），点击安装并允许"未知来源"。

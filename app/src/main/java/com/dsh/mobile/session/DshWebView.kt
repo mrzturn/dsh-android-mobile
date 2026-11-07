@@ -95,7 +95,7 @@ fun DshWebView(
 }
 
 @SuppressLint("SetJavaScriptEnabled") // required: hosts the paired desktop's official Web GUI; all other hardening flags set below
-private fun configureHardenedSettings(web: WebView) = with(web.settings) {
+internal fun configureHardenedSettings(web: WebView) = with(web.settings) {
     javaScriptEnabled = true
     domStorageEnabled = true
     databaseEnabled = true
@@ -111,6 +111,14 @@ private fun configureHardenedSettings(web: WebView) = with(web.settings) {
     mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
     safeBrowsingEnabled = true
     userAgentString = userAgentString.replace("; wv", "")
+    // Cover-screen usability: the GUI is desktop-sized; on the Flip's narrow
+    // cover display (or any small viewport) let the user pinch-zoom and start
+    // from an overview. Desktop pages rarely ship a mobile viewport meta.
+    setSupportZoom(true)
+    builtInZoomControls = true
+    displayZoomControls = false
+    useWideViewPort = true
+    loadWithOverviewMode = true
 }
 
 private fun buildWebViewClient(
