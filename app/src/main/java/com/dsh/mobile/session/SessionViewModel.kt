@@ -54,9 +54,13 @@ class SessionViewModel(app: Application) : AndroidViewModel(app) {
     /** True while the pair boot flow (token -> grant -> device cookie) is in flight. */
     var pairing: Boolean = true
 
+    /** 每次绑定连接只自愈一次，防止清理后 reload 仍见失效页时死循环。 */
+    private var swPurgeDone = false
+
     fun bind(connection: Connection) {
         this.connection = connection
         pairing = true
+        swPurgeDone = false
     }
 
     /**
@@ -87,8 +91,50 @@ class SessionViewModel(app: Application) : AndroidViewModel(app) {
         _canGoBack.value = view.canGoBack()
         lastFailureUrl.value = null
         // The host serves the refusal as a 200 page with this fixed title.
-        stalePairing.value = view.title?.trim() == "Pairing link invalid"
+        val stale = view.title?.trim() == "Pairing link invalid"
+        stalePairing.value = stale
+        // 死配对自愈：失效页多半是旧实例遗留的 service worker 拦出来的，
+        // 清掉 SW 与缓存后 reload，让服务端配对链自然接管。
+        if (stale) purgeStaleServiceWorker(view)
         CookieManager.getInstance().flush()
+    }
+
+    /**
+     * 远程入口是 PWA：上一代实例注册的 service worker 会跨服务重启、
+     * 跨插件升级长期存留在本 WebView 里，服务端凭证全换之后它仍按旧
+     * 校验逻辑在 `/` 拦截并缓存失效页，导致重新扫码也无法恢复（app 原
+     * 有的清理只清 cookie，碰不到 SW 与 Cache Storage）。此处检测到失效
+     * 页即注销本 origin 全部 SW、清空 Cache Storage，然后由页面自行
+     * reload——SW 消失后未配对请求直接命中服务端，走正常配对链。
+     */
+    private fun purgeStaleServiceWorker(view: WebView) {
+        if (swPurgeDone) return
+        swPurgeDone = true
+        view.evaluateJavascript(
+            """
+            (function () {
+              var dropCaches = function () {
+                if (!window.caches || !caches.keys) return Promise.resolve();
+                return caches.keys().then(function (ks) {
+                  return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+                });
+              };
+              var dropSw = function () {
+                if (!navigator.serviceWorker || !navigator.serviceWorker.getRegistrations) {
+                  return Promise.resolve();
+                }
+                return navigator.serviceWorker.getRegistrations().then(function (rs) {
+                  return Promise.all(rs.map(function (r) { return r.unregister(); }));
+                });
+              };
+              dropSw().then(dropCaches).then(
+                function () { location.reload(); },
+                function () { location.reload(); }
+              );
+            })();
+            """.trimIndent(),
+            null,
+        )
     }
 
     fun onReceivedError(code: Int, description: String?, failingUrl: String?) {
