@@ -42,3 +42,6 @@ keystore/*.properties
 
 # macOS
 .DS_Store
+
+# DSH session harness artifacts
+.dsh-switchman/
