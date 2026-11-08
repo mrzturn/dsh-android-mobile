@@ -34,8 +34,9 @@ android {
         applicationId = "com.dsh.mobile"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.1.0"
+        // Release CI overrides these from the pushed git tag (vX.Y.Z).
+        versionCode = (System.getenv("VERSION_CODE") ?: "1").toInt()
+        versionName = System.getenv("VERSION_NAME") ?: "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
