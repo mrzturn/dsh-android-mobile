@@ -1,6 +1,6 @@
 /* DSH Mobile FlexPad bridge — injected into the official Web GUI.
- * Provides pointer-event synthesis for the native touchpad/quick keys and
- * small QoL patches (viewport, keyboard, hover suppression).
+ * small QoL patches (viewport, keyboard, hover suppression, phone composer
+ * one-line controls).
  * The native side calls window.DshMobileFlexpad.* via evaluateJavascript;
  * results flow back through the injected DshMobileAndroid JavascriptInterface.
  */
@@ -93,8 +93,45 @@
     ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight', Backspace: 'Backspace', ' ': 'Space',
   };
 
+  // ---- Phone composer: one-line controls ---------------------------------
+  // Portrait adaptation layers (the remote-UI plugin's mobile-adapt.css, and
+  // narrow official layouts) wrap the composer control row: the trailing
+  // group (model picker, voice, send) is forced onto its own full-width row
+  // (flex-basis:100%), which stacks the permission picker and the model
+  // picker vertically on phones. Keep them on one line instead: the
+  // permission/plan seats stay left, the model + voice controls hug the
+  // pinned send button, and the model picker stays icon-only through the
+  // official compact variables. Scoped to coarse pointers <=1100px (the
+  // plugin's own portrait threshold), so desktops are untouched.
+  var MOBILE_CSS_ID = "dshMobileFlexpad/mobile-composer.css";
+  var MOBILE_CSS =
+    "@media (pointer:coarse) and (max-width:1100px){" +
+      "body [data-composer-seat] [class$=\"_row\"]," +
+      "body [class$=\"_composerSeat\"] [class$=\"_row\"]" +
+      "{--dsh-composer-model-text-display:none;--dsh-composer-model-icon-display:block}" +
+      "body [data-composer-seat] [class$=\"_trailing\"]," +
+      "body [data-composer-seat] [class$=\"_trailingActive\"]," +
+      "body [class$=\"_composerSeat\"] [class$=\"_trailing\"]," +
+      "body [class$=\"_composerSeat\"] [class$=\"_trailingActive\"]" +
+      "{flex:1 1 auto;justify-content:flex-end}" +
+    "}";
+  function ensureMobileComposerCss() {
+    if (typeof document === "undefined") return;
+    if (document.querySelector("style[data-plugin-css=\"" + MOBILE_CSS_ID + "\"]")) return;
+    var parent = document.head || document.documentElement;
+    if (!parent) return;
+    var tag = document.createElement("style");
+    tag.setAttribute("data-plugin-css", MOBILE_CSS_ID);
+    tag.textContent = MOBILE_CSS;
+    parent.appendChild(tag);
+  }
+  ensureMobileComposerCss();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ensureMobileComposerCss, { once: true });
+  }
+
   window.DshMobileFlexpad = {
-    version: 1,
+    version: 2,
     clickAt: clickAt,
     drag: drag,
     scrollBy: scrollBy,

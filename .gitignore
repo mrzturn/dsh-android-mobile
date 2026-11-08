@@ -45,3 +45,6 @@ keystore/*.properties
 
 # DSH session harness artifacts
 .dsh-switchman/
+
+# Local gradle user-home used for sandboxed builds
+.gradle-home/

@@ -7,6 +7,7 @@ import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,7 +51,17 @@ fun DshWebView(
             context2.assets.open("flexpad.js").bufferedReader().use { it.readText() }
         }.getOrNull() ?: ""
     }
+    // Relay double-compression workaround: fetch the fetch-patch script too
+    // (injected alongside flexpad.js on every page start).
+    val httpPatchScript = remember {
+        runCatching {
+            context2.assets.open("dsh-http-patch.js").bufferedReader().use { it.readText() }
+        }.getOrNull() ?: ""
+    }
     val origin = sessionVm.connection?.baseUrl ?: entryUrl.substringBefore("/pair")
+    // One proxy per session origin: owns the OkHttp client, the JS bridge and
+    // the cookie write-back used by shouldInterceptRequest.
+    val tunnelProxy = remember(origin) { TunnelProxy(origin) }
     val webView = remember(origin) {
         WebViewCache.get(origin, context) ?: WebView(WebViewCache.newCreationContext(context)).apply {
         WebViewCache.put(origin, this)
@@ -60,13 +71,15 @@ fun DshWebView(
             configureHardenedSettings(this)
             CookieManager.getInstance().setAcceptCookie(true)
             CookieManager.getInstance().setAcceptThirdPartyCookies(this, false)
-            webViewClient = buildWebViewClient(sessionVm, onExternalLink, injectScript)
+            webViewClient = buildWebViewClient(sessionVm, onExternalLink, injectScript, httpPatchScript, tunnelProxy)
             webChromeClient = object : WebChromeClient() {
                 override fun onProgressChanged(view: WebView?, newProgress: Int) {
                     sessionVm.onProgress(newProgress)
                 }
             }
             addJavascriptInterface(flexPadBridge, "DshMobileAndroid")
+            // JS half of the relay workaround: body-bearing fetches go native.
+            addJavascriptInterface(tunnelProxy.bridge, "DshMobileTunnel")
         }
     }
 
@@ -125,6 +138,8 @@ private fun buildWebViewClient(
     sessionVm: SessionViewModel,
     onExternalLink: (String) -> Unit,
     injectScript: String,
+    httpPatchScript: String,
+    tunnelProxy: TunnelProxy,
 ): WebViewClient = object : WebViewClient() {
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         if (!request.isForMainFrame) return false
@@ -150,12 +165,20 @@ private fun buildWebViewClient(
             }
         }
     }
+    override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+        // Relay double-compression workaround: session-origin requests go
+        // through OkHttp with gzip peeling. Anything else (data:, about:,
+        // assets, third-party) stays on the network stack.
+        return runCatching { tunnelProxy.intercept(request) }.getOrNull()
+    }
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         if (view == null || url == null) return
+        // FlexPad bridge first (defines DshMobileFlexpad), then the relay
+        // workaround's fetch patch (uses window.DshMobileTunnel).
         if (injectScript.isNotEmpty()) view.evaluateJavascript(injectScript, null)
+        if (httpPatchScript.isNotEmpty()) view.evaluateJavascript(httpPatchScript, null)
     }
-
     override fun onPageFinished(view: WebView, url: String) {
         if (sessionVm.pairing && !url.contains("/pair-accept")) sessionVm.markPaired()
         sessionVm.onPageFinished(view, url)
