@@ -39,3 +39,6 @@ keystore/
 *.jks
 *.keystore
 keystore/*.properties
+
+# macOS
+.DS_Store
